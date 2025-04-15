@@ -1,13 +1,32 @@
-- name: Install Docker and Run Jenkins
+- name: Install Docker and AWS CLI and  Run Jenkins
   hosts: jenkins
   become: true
   
   tasks:
     - name: Install prerequisite packages
       apt:
-        name: ["apt-transport-https", "ca-certificates", "curl", "software-properties-common", "python3-pip"]
+        name: ["apt-transport-https", "ca-certificates", "curl", "software-properties-common", "python3-pip", "unzip"]
         state: present
         update_cache: yes
+    - name: Download AWS CLI v2 installer
+      shell: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+
+    - name: Unzip AWS CLI installer
+      unarchive:
+        src: /tmp/awscliv2.zip
+        dest: /tmp
+        remote_src: yes
+
+    - name: Install AWS CLI
+      command: /tmp/aws/install
+
+    - name: Verify AWS CLI version
+      command: aws --version
+      register: aws_cli_version
+
+    - name: Show AWS CLI version
+      debug:
+        msg: "{{ aws_cli_version.stdout }}"
 
     - name: Add Docker GPG key
       shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
@@ -44,8 +63,8 @@
     - name: Run Jenkins container
       shell: |
         docker rm -f $(docker ps -aq)
-        #docker volume create jenkins_data
-        docker run -d --name jenkins_container -p 8080:8080 -v /var/lib/jenkins:/var/lib/jenkins -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker --group-add $(stat -c "%g" /var/run/docker.sock)  jenkins/jenkins
+        docker volume create jenkins_data
+        docker run -d --name jenkins_container   -p 8080:8080   -v jenkins_data:/var/jenkins_home   -v /var/run/docker.sock:/var/run/docker.sock   -v /usr/bin/docker:/usr/bin/docker   --group-add $(stat -c "%g" /var/run/docker.sock)   jenkins/jenkins
       become: yes
 
     - name: Verify Jenkins is running
