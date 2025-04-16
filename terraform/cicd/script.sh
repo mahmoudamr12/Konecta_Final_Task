@@ -13,8 +13,9 @@ while ! nc -z $PUBLIC_IP 22; do
 done
 
 echo "SSH is available. Generating dynamic Ansible inventory...."
-cd /home/mahmoud/final_project_konecta/ansible
+cd /home/mahmoud/final_project_konecta/Konecta_Final_Task/ansible
 
+rm inventory.ini
 cat <<EOF > inventory.ini
 [jenkins]
 $PUBLIC_IP ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/ci_cd_key  ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'

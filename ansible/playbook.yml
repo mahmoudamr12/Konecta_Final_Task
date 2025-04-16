@@ -1,0 +1,81 @@
+- name: Install Docker and Build Jenkins with AWS CLI
+  hosts: jenkins
+  become: true
+
+  vars:
+    jenkins_image_name: jenkins-custom:awscli
+
+  tasks:
+    - name: Install prerequisite packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+          - unzip
+        state: present
+        update_cache: yes
+
+    - name: Add Docker GPG key
+      shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Check Docker version
+      command: docker --version
+      register: docker_version_output
+
+    - name: Debug Docker version
+      debug:
+        msg: "{{ docker_version_output.stdout }}"
+
+    - name: Copy Jenkins Dockerfile with AWS CLI
+      copy:
+        src: Dockerfile.jenkins
+        dest: /tmp/Dockerfile.jenkins
+
+    - name: Build custom Jenkins image with AWS CLI
+      shell: docker build -t {{ jenkins_image_name }} -f /tmp/Dockerfile.jenkins /tmp
+      args:
+        chdir: /tmp
+
+    - name: Stop and remove all containers
+      shell: docker rm -f $(docker ps -aq) || true
+
+    - name: Create Jenkins data volume
+      shell: docker volume create jenkins_data
+
+    - name: Run Jenkins container from custom image
+      shell: |
+        docker run -d --name jenkins_container \
+          -p 8080:8080 \
+          -v jenkins_data:/var/jenkins_home \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v /usr/bin/docker:/usr/bin/docker \
+          --group-add $(stat -c "%g" /var/run/docker.sock) \
+          {{ jenkins_image_name }}
+
+    - name: Verify Jenkins is running
+      shell: docker ps
+      register: docker_ps_output
+
+    - name: Display running containers
+      debug:
+        msg: "{{ docker_ps_output.stdout_lines }}"
