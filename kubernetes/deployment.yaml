@@ -24,7 +24,7 @@ spec:
               #  configMapKeyRef:
                #   name: app-config
                 #  key: REDIS_HOST
-              value: redis.default
+              value: redis
             - name: ENVIRONMENT
               valueFrom:
                 configMapKeyRef:
