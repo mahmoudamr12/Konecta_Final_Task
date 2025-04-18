@@ -8,4 +8,4 @@ spec:
   ports:
     - port: 6379
       targetPort: 6379
-  clusterIP: None  # Headless service so pods can discover each other
+#  clusterIP: None  # Headless service so pods can discover each other
