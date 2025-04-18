@@ -3,7 +3,7 @@ resource "aws_instance" "ci_cd_instance" {
   instance_type = var.instance_type
   key_name     = aws_key_pair.ci_cd_key.key_name
   associate_public_ip_address = true
-  vpc_security_group_ids = [aws_security_group.jenkins_sg.id]
+  vpc_security_group_ids = [aws_security_group.jenkins_sg2.id]
 
   tags = {
     Name = "ci-cd-server"

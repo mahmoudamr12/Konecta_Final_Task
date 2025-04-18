@@ -60,17 +60,17 @@
       shell: docker pull jenkins/jenkins
       become: yes
 
-    - name: Run Jenkins container
-      shell: |
-        docker rm -f $(docker ps -aq)
-        docker volume create jenkins_data
-        docker run -d --name jenkins_container   -p 8080:8080   -v jenkins_data:/var/jenkins_home   -v /var/run/docker.sock:/var/run/docker.sock   -v /usr/bin/docker:/usr/bin/docker   --group-add $(stat -c "%g" /var/run/docker.sock)   jenkins/jenkins
-      become: yes
+   # - name: Run Jenkins container
+    #  shell: |
+     #   docker rm -f $(docker ps -aq)
+      #  docker volume create jenkins_data
+       # docker run -d --name jenkins_container   -p 8080:8080   -v jenkins_data:/var/jenkins_home   -v /var/run/docker.sock:/var/run/docker.sock   -v /usr/bin/docker:/usr/bin/docker   --group-add $(stat -c "%g" /var/run/docker.sock)   jenkins/jenkins
+     # become: yes
 
-    - name: Verify Jenkins is running
-      shell: docker ps
-      register: docker_ps_output
+   # - name: Verify Jenkins is running
+    #  shell: docker ps
+     # register: docker_ps_output
 
-    - name: Display Docker ps output
-      debug:
-        msg: "{{ docker_ps_output.stdout_lines }}"
+   # - name: Display Docker ps output
+    #  debug:
+     #   msg: "{{ docker_ps_output.stdout_lines }}"

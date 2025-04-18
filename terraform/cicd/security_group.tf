@@ -1,5 +1,5 @@
-resource "aws_security_group" "jenkins_sg" {
-  name        = "jenkins-ci-cd-sg"
+resource "aws_security_group" "jenkins_sg2" {
+  name        = "jenkins-ci-cd-sg2"
   description = "Allow SSH and Jenkins (8080)"
 
   ingress {
