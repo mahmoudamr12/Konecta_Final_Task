@@ -68,22 +68,12 @@ pipeline {
                     # Create namespace if not exists
                     kubectl create namespace ${env.BRANCH_NAME} --dry-run=client -o yaml | kubectl apply -f -
 
-                    # Process and apply ConfigMap
+                    # Process and apply all manifests with environment replacement
                     sed -e "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" configmap.yaml | kubectl apply -n ${env.BRANCH_NAME} -f -
-
-                    # Process and apply Deployment
-                    sed -e "s|{{IMAGE}}|${env.REPO_URL}:${env.IMAGE_TAG}|g" \
-                        -e "s|{{NAMESPACE}}|${env.BRANCH_NAME}|g" \
-                        -e "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" \
-                        deployment.yaml | kubectl apply -n ${env.BRANCH_NAME} -f -
-
-                    # Process and apply Service
-                    sed -e "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" \
-                        service.yaml | kubectl apply -n ${env.BRANCH_NAME} -f -
-
-                    # Apply Redis resources
-                    kubectl apply -n ${env.BRANCH_NAME} -f redis-service.yml
-                    kubectl apply -n ${env.BRANCH_NAME} -f redis-deployment.yml
+                    sed -e "s|{{IMAGE}}|${env.REPO_URL}:${env.IMAGE_TAG}|g" -e "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" deployment.yaml | kubectl apply -n ${env.BRANCH_NAME} -f -
+                    sed -e "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" service.yaml | kubectl apply -n ${env.BRANCH_NAME} -f -
+                    sed -e "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" redis-service.yml | kubectl apply -n ${env.BRANCH_NAME} -f -
+                    sed -e "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" redis-deployment.yml | kubectl apply -n ${env.BRANCH_NAME} -f -
                 """
             }
         }
