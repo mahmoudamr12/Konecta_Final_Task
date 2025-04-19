@@ -13,27 +13,13 @@ spec:
         pathType: Prefix
         backend:
           service:
-<<<<<<< HEAD
             name: my-app-service.test.svc.cluster.local  # FQDN format
             port:
               number: 80
-=======
-            name: my-app-service
-            namespace: test  # Key difference - specifies namespace
-            port:
-              number: 8000     # Should match your Service's port
->>>>>>> 3af2920ca2166b9ecc547b255e58f637df2e80cb
       - path: /prod
         pathType: Prefix
         backend:
           service:
-<<<<<<< HEAD
             name: my-app-service.prod.svc.cluster.local  # FQDN format
             port:
               number: 80
-=======
-            name: my-app-service 
-            namespace: prod  # Key difference - specifies namespace
-            port:
-              number: 8000     # Should match your Service's port
->>>>>>> 3af2920ca2166b9ecc547b255e58f637df2e80cb
