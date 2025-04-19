@@ -77,8 +77,11 @@ pipeline {
                         -e "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" \
                         deployment.yaml | kubectl apply -n ${env.BRANCH_NAME} -f -
 
-                    # Apply other resources
-                    kubectl apply -n ${env.BRANCH_NAME} -f service.yaml
+                    # Process and apply Service
+                    sed -e "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" \
+                        service.yaml | kubectl apply -n ${env.BRANCH_NAME} -f -
+
+                    # Apply Redis resources
                     kubectl apply -n ${env.BRANCH_NAME} -f redis-service.yml
                     kubectl apply -n ${env.BRANCH_NAME} -f redis-deployment.yml
                 """
