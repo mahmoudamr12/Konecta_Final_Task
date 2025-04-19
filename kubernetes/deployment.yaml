@@ -4,7 +4,7 @@ metadata:
   name: my-app
   namespace: {{ENVIRONMENT}}
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: my-app
@@ -17,13 +17,14 @@ spec:
         - name: my-container
           image: {{IMAGE}}
           ports:
-            - containerPort: 80
+            - containerPort: 8000
           env:
             - name: REDIS_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: app-config
-                  key: REDIS_HOST
+             # valueFrom:
+              #  configMapKeyRef:
+               #   name: app-config
+                #  key: REDIS_HOST
+              value: redis
             - name: ENVIRONMENT
               valueFrom:
                 configMapKeyRef:
