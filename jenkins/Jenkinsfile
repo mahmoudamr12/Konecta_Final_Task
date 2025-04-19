@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION = 'us-east-1'
+        ECR_REPO = 'my-image'
+        IMAGE_TAG = 'latest'
+        AWS_ACCOUNT_ID = credentials('aws-credential')
+        REPO_URL = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git url: 'https://github.com/mahmoudamr12/Konecta_Final_Task.git', branch: 'prod'
+            }
+        }
+
+        stage('AWS Operations') {
+            steps {
+                withAWS(credentials: 'aws-creds', region: "${env.AWS_REGION}") {
+                    sh 'aws --version'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                    cd docker
+                    docker build -t $ECR_REPO:$IMAGE_TAG .
+                    docker tag $ECR_REPO:$IMAGE_TAG $REPO_URL:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                withAWS(credentials: 'aws-creds', region: "${env.AWS_REGION}") {
+                    sh '''
+                        aws --version
+                        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPO_URL
+                        
+                        docker push $REPO_URL:$IMAGE_TAG
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                script {
+                    def namespace = "test"
+                    def environment = "test"
+                    // kubectl config use-context your-eks-context
+                    // kubectl version
+                    // cat /home/ubuntu/.kube/config
+                    // aws sts get-caller-identity
+                    withAWS(credentials: 'aws-creds', region: "${env.AWS_REGION}") {
+
+                        sh """
+                            
+                            aws eks update-kubeconfig --region $AWS_REGION --name private-eks-cluster
+                            cd kubernetes
+                            
+                            kubectl get nodes
+                            kubectl create namespace ${namespace} --dry-run=client -o yaml | kubectl apply -f -
+
+                            # Replace placeholders in configmap and deployment
+                            sed -i "s|{{ENVIRONMENT}}|${environment}|g" configmap.yaml
+                            sed -i "s|{{IMAGE}}|${REPO_URL}:${IMAGE_TAG}|g" deployment.yaml
+                            sed -i "s|{{ENVIRONMENT}}|${environment}|g" deployment.yaml
+                            
+                            # Apply manifests
+                            kubectl apply -f configmap.yaml
+                            kubectl apply -f deployment.yaml
+                            kubectl apply -f service.yaml
+                            kubectl apply -f redis-service.yml
+                            kubectl apply -f redis-deployment.yml
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
+
