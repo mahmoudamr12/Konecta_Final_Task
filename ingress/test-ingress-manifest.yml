@@ -1,7 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: app-ingress
+  name: app-ingress-test
+  namespace: test
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
@@ -13,13 +14,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: my-app-service.test.svc.cluster.local  # FQDN format
+            name: my-app-service
             port:
-              number: 80
-      - path: /prod
-        pathType: Prefix
-        backend:
-          service:
-            name: my-app-service.prod.svc.cluster.local  # FQDN format
-            port:
-              number: 80
+              number: 8000
