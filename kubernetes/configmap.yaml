@@ -4,5 +4,5 @@ metadata:
   name: app-config
   namespace: {{ENVIRONMENT}}
 data:
-  REDIS_HOST: "localhost:6379"
+  REDIS_HOST: "redis"
   ENVIRONMENT: "{{ENVIRONMENT}}"

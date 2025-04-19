@@ -12,7 +12,19 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git url: 'https://github.com/mahmoudamr12/Konecta_Final_Task.git', branch: 'prod'
+                checkout scm
+                script {
+                    // Determine environment based on branch
+                    if (env.BRANCH_NAME == 'test') {
+                        env.ENVIRONMENT = 'test'
+                        env.NAMESPACE = 'test'
+                    } else if (env.BRANCH_NAME == 'prod') {
+                        env.ENVIRONMENT = 'prod'
+                        env.NAMESPACE = 'prod'
+                    } else {
+                        error("Unsupported branch: ${env.BRANCH_NAME}")
+                    }
+                }
             }
         }
 
@@ -38,9 +50,7 @@ pipeline {
             steps {
                 withAWS(credentials: 'aws-creds', region: "${env.AWS_REGION}") {
                     sh '''
-                        aws --version
                         aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPO_URL
-                        
                         docker push $REPO_URL:$IMAGE_TAG
                     '''
                 }
@@ -50,33 +60,25 @@ pipeline {
         stage('Deploy to EKS') {
             steps {
                 script {
-                    def namespace = "test"
-                    def environment = "test"
-                    // kubectl config use-context your-eks-context
-                    // kubectl version
-                    // cat /home/ubuntu/.kube/config
-                    // aws sts get-caller-identity
                     withAWS(credentials: 'aws-creds', region: "${env.AWS_REGION}") {
-
                         sh """
-                            
                             aws eks update-kubeconfig --region $AWS_REGION --name private-eks-cluster
                             cd kubernetes
                             
                             kubectl get nodes
-                            kubectl create namespace ${namespace} --dry-run=client -o yaml | kubectl apply -f -
+                            kubectl create namespace ${env.NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
 
-                            # Replace placeholders in configmap and deployment
-                            sed -i "s|{{ENVIRONMENT}}|${environment}|g" configmap.yaml
-                            sed -i "s|{{IMAGE}}|${REPO_URL}:${IMAGE_TAG}|g" deployment.yaml
-                            sed -i "s|{{ENVIRONMENT}}|${environment}|g" deployment.yaml
+                            # Replace placeholders
+                            sed -i "s|{{ENVIRONMENT}}|${env.ENVIRONMENT}|g" configmap.yaml
+                            sed -i "s|{{IMAGE}}|${env.REPO_URL}:${env.IMAGE_TAG}|g" deployment.yaml
+                            sed -i "s|{{NAMESPACE}}|${env.NAMESPACE}|g" deployment.yaml
                             
                             # Apply manifests
-                            kubectl apply -f configmap.yaml
-                            kubectl apply -f deployment.yaml
-                            kubectl apply -f service.yaml
-                            kubectl apply -f redis-service.yml
-                            kubectl apply -f redis-deployment.yml
+                            kubectl apply -n ${env.NAMESPACE} -f configmap.yaml
+                            kubectl apply -n ${env.NAMESPACE} -f deployment.yaml
+                            kubectl apply -n ${env.NAMESPACE} -f service.yaml
+                            kubectl apply -n ${env.NAMESPACE} -f redis-service.yml
+                            kubectl apply -n ${env.NAMESPACE} -f redis-deployment.yml
                         """
                     }
                 }
@@ -84,4 +86,3 @@ pipeline {
         }
     }
 }
-
