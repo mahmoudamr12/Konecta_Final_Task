@@ -6,20 +6,25 @@ pipeline {
         ECR_REPO = 'my-image'
         IMAGE_TAG = 'latest'
         AWS_ACCOUNT_ID = credentials('aws-credential')
-        // These two will be initialized dynamically in the script block
-        // ENVIRONMENT and NAMESPACE will be set based on the branch name
+        REPO_URL = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
                 checkout scm
-                script {
-                    // Set ENVIRONMENT and NAMESPACE from branch name
-                    env.ENVIRONMENT = env.BRANCH_NAME
-                    env.NAMESPACE = env.BRANCH_NAME
-                    env.REPO_URL = "${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO}"
-                }
+                // script {
+                //     // Determine environment based on branch
+                //     if (env.BRANCH_NAME == 'test') {
+                //         env.ENVIRONMENT = 'test'
+                //         env.NAMESPACE = 'test'
+                //     } else if (env.BRANCH_NAME == 'prod') {
+                //         env.ENVIRONMENT = 'prod'
+                //         env.NAMESPACE = 'prod'
+                //     } else {
+                //         error("Unsupported branch: ${env.BRANCH_NAME}")
+                //     }
+                // }
             }
         }
 
@@ -53,30 +58,33 @@ pipeline {
         }
 
         stage('Deploy to EKS') {
-            steps {
-                script {
-                    withAWS(credentials: 'aws-creds', region: "${env.AWS_REGION}") {
-                        sh """
-                            aws eks update-kubeconfig --region $AWS_REGION --name private-eks-cluster
-                            cd kubernetes
+    steps {
+        script {
+            withAWS(credentials: 'aws-creds', region: "${env.AWS_REGION}") {
+                sh """
+                    aws eks update-kubeconfig --region $AWS_REGION --name private-eks-cluster
+                    cd kubernetes
 
-                            # Replace placeholders
-                            sed -i "s|{{ENVIRONMENT}}|${env.ENVIRONMENT}|g" configmap.yaml
-                            sed -i "s|{{IMAGE}}|${env.REPO_URL}:${env.IMAGE_TAG}|g" deployment.yaml
-                            sed -i "s|{{NAMESPACE}}|${env.NAMESPACE}|g" deployment.yaml
+                    # Create namespace if not exists
+                    kubectl create namespace ${env.BRANCH_NAME} --dry-run=client -o yaml | kubectl apply -f -
 
-                            kubectl create namespace ${env.NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+                    # Process and apply ConfigMap
+                    sed -e "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" configmap.yaml | kubectl apply -n ${env.BRANCH_NAME} -f -
 
-                            # Apply manifests
-                            kubectl apply -n ${env.NAMESPACE} -f configmap.yaml
-                            kubectl apply -n ${env.NAMESPACE} -f deployment.yaml
-                            kubectl apply -n ${env.NAMESPACE} -f service.yaml
-                            kubectl apply -n ${env.NAMESPACE} -f redis-service.yml
-                            kubectl apply -n ${env.NAMESPACE} -f redis-deployment.yml
-                        """
-                    }
-                }
+                    # Process and apply Deployment
+                    sed -e "s|{{IMAGE}}|${env.REPO_URL}:${env.IMAGE_TAG}|g" \
+                        -e "s|{{NAMESPACE}}|${env.BRANCH_NAME}|g" \
+                        -e "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" \
+                        deployment.yaml | kubectl apply -n ${env.BRANCH_NAME} -f -
+
+                    # Apply other resources
+                    kubectl apply -n ${env.BRANCH_NAME} -f service.yaml
+                    kubectl apply -n ${env.BRANCH_NAME} -f redis-service.yml
+                    kubectl apply -n ${env.BRANCH_NAME} -f redis-deployment.yml
+                """
             }
         }
+    }
+}
     }
 }

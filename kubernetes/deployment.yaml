@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-app
-  namespace: {{NAMESPACE}}
+  namespace: {{ENVIRONMENT}}
 spec:
   replicas: 1
   selector:
@@ -24,6 +24,7 @@ spec:
                 configMapKeyRef:
                   name: app-config
                   key: REDIS_HOST
+             # value: redis
             - name: ENVIRONMENT
               valueFrom:
                 configMapKeyRef:

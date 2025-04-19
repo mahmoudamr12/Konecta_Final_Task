@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: app-config
-  namespace: {{NAMESPACE}}
+  namespace: {{ENVIRONMENT}}
 data:
   REDIS_HOST: redis
-  ENVIRONMENT: {{ENVIRONMENT}}
+  ENVIRONMENT: "{{ENVIRONMENT}}"
