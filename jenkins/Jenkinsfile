@@ -13,19 +13,19 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 checkout scm
-            //     script {
-            //         // Determine environment based on branch
-            //         // if (env.BRANCH_NAME == 'test') {
-            //         //     env.ENVIRONMENT = 'test'
-            //         //     env.NAMESPACE = 'test'
-            //         // } else if (env.BRANCH_NAME == 'prod') {
-            //         //     env.ENVIRONMENT = 'prod'
-            //         //     env.NAMESPACE = 'prod'
-            //         // } else {
-            //         //     error("Unsupported branch: ${env.BRANCH_NAME}")
-            //         // }
-            //     }
-            // }
+                // script {
+                //     // Determine environment based on branch
+                //     if (env.BRANCH_NAME == 'test') {
+                //         env.ENVIRONMENT = 'test'
+                //         env.NAMESPACE = 'test'
+                //     } else if (env.BRANCH_NAME == 'prod') {
+                //         env.ENVIRONMENT = 'prod'
+                //         env.NAMESPACE = 'prod'
+                //     } else {
+                //         error("Unsupported branch: ${env.BRANCH_NAME}")
+                //     }
+                // }
+            }
         }
 
         stage('AWS Operations') {
@@ -64,14 +64,14 @@ pipeline {
                         sh """
                             aws eks update-kubeconfig --region $AWS_REGION --name private-eks-cluster
                             cd kubernetes
-                            
+
                             kubectl create namespace ${env.BRANCH_NAME} --dry-run=client -o yaml | kubectl apply -f -
 
                             # Replace placeholders
                             sed -i "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" configmap.yaml
                             sed -i "s|{{IMAGE}}|${env.REPO_URL}:${env.IMAGE_TAG}|g" deployment.yaml
                             sed -i "s|{{NAMESPACE}}|${env.BRANCH_NAME}|g" deployment.yaml
-                            
+
                             # Apply manifests
                             kubectl apply -n ${env.BRANCH_NAME} -f configmap.yaml
                             kubectl apply -n ${env.BRANCH_NAME} -f deployment.yaml
