@@ -13,19 +13,19 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 checkout scm
-                script {
-                    // Determine environment based on branch
-                    // if (env.BRANCH_NAME == 'test') {
-                    //     env.ENVIRONMENT = 'test'
-                    //     env.NAMESPACE = 'test'
-                    // } else if (env.BRANCH_NAME == 'prod') {
-                    //     env.ENVIRONMENT = 'prod'
-                    //     env.NAMESPACE = 'prod'
-                    // } else {
-                    //     error("Unsupported branch: ${env.BRANCH_NAME}")
-                    // }
-                }
-            }
+            //     script {
+            //         // Determine environment based on branch
+            //         // if (env.BRANCH_NAME == 'test') {
+            //         //     env.ENVIRONMENT = 'test'
+            //         //     env.NAMESPACE = 'test'
+            //         // } else if (env.BRANCH_NAME == 'prod') {
+            //         //     env.ENVIRONMENT = 'prod'
+            //         //     env.NAMESPACE = 'prod'
+            //         // } else {
+            //         //     error("Unsupported branch: ${env.BRANCH_NAME}")
+            //         // }
+            //     }
+            // }
         }
 
         stage('AWS Operations') {
