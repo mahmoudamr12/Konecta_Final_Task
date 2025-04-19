@@ -41,10 +41,10 @@ module "eks" {
 
   eks_managed_node_groups = {
     default = {
-      desired_size   = 2
-      max_size       = 2
-      min_size       = 2
-      instance_types = ["t2.micro"]
+      desired_size   = 3
+      max_size       = 3
+      min_size       = 3
+      instance_types = ["t3.medium"]
       subnet_ids     = var.subnet_id
     }
   }
