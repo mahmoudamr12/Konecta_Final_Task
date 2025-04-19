@@ -15,15 +15,15 @@ pipeline {
                 checkout scm
                 script {
                     // Determine environment based on branch
-                    if (env.BRANCH_NAME == 'test') {
-                        env.ENVIRONMENT = 'test'
-                        env.NAMESPACE = 'test'
-                    } else if (env.BRANCH_NAME == 'prod') {
-                        env.ENVIRONMENT = 'prod'
-                        env.NAMESPACE = 'prod'
-                    } else {
-                        error("Unsupported branch: ${env.BRANCH_NAME}")
-                    }
+                    // if (env.BRANCH_NAME == 'test') {
+                    //     env.ENVIRONMENT = 'test'
+                    //     env.NAMESPACE = 'test'
+                    // } else if (env.BRANCH_NAME == 'prod') {
+                    //     env.ENVIRONMENT = 'prod'
+                    //     env.NAMESPACE = 'prod'
+                    // } else {
+                    //     error("Unsupported branch: ${env.BRANCH_NAME}")
+                    // }
                 }
             }
         }
@@ -65,20 +65,19 @@ pipeline {
                             aws eks update-kubeconfig --region $AWS_REGION --name private-eks-cluster
                             cd kubernetes
                             
-                            kubectl get nodes
-                            kubectl create namespace ${env.NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+                            kubectl create namespace ${env.BRANCH_NAME} --dry-run=client -o yaml | kubectl apply -f -
 
                             # Replace placeholders
-                            sed -i "s|{{ENVIRONMENT}}|${env.ENVIRONMENT}|g" configmap.yaml
+                            sed -i "s|{{ENVIRONMENT}}|${env.BRANCH_NAME}|g" configmap.yaml
                             sed -i "s|{{IMAGE}}|${env.REPO_URL}:${env.IMAGE_TAG}|g" deployment.yaml
-                            sed -i "s|{{NAMESPACE}}|${env.NAMESPACE}|g" deployment.yaml
+                            sed -i "s|{{NAMESPACE}}|${env.BRANCH_NAME}|g" deployment.yaml
                             
                             # Apply manifests
-                            kubectl apply -n ${env.NAMESPACE} -f configmap.yaml
-                            kubectl apply -n ${env.NAMESPACE} -f deployment.yaml
-                            kubectl apply -n ${env.NAMESPACE} -f service.yaml
-                            kubectl apply -n ${env.NAMESPACE} -f redis-service.yml
-                            kubectl apply -n ${env.NAMESPACE} -f redis-deployment.yml
+                            kubectl apply -n ${env.BRANCH_NAME} -f configmap.yaml
+                            kubectl apply -n ${env.BRANCH_NAME} -f deployment.yaml
+                            kubectl apply -n ${env.BRANCH_NAME} -f service.yaml
+                            kubectl apply -n ${env.BRANCH_NAME} -f redis-service.yml
+                            kubectl apply -n ${env.BRANCH_NAME} -f redis-deployment.yml
                         """
                     }
                 }
