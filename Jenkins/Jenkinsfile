@@ -13,17 +13,6 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 checkout scm
-                // script {
-                //     if (env.BRANCH_NAME == 'test') {
-                //         env.ENVIRONMENT = 'test'
-                //         env.NAMESPACE = 'test'
-                //     } else if (env.BRANCH_NAME == 'prod') {
-                //         env.ENVIRONMENT = 'prod'
-                //         env.NAMESPACE = 'prod'
-                //     } else {
-                //         error("Unsupported branch: ${env.BRANCH_NAME}")
-                //     }
-                // }
             }
         }
 

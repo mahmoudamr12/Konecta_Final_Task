@@ -2,7 +2,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: redis
-  #namespace: prod
   namespace: {{ENVIRONMENT}}
 spec:
   selector:
@@ -10,4 +9,4 @@ spec:
   ports:
     - port: 6379
       targetPort: 6379
-#  clusterIP: None  # Headless service so pods can discover each other
+

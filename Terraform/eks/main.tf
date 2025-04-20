@@ -2,25 +2,6 @@ provider "aws" {
   region = var.region
 }
 
-resource "aws_security_group" "eks_api_access" {
-  name        = "eks-api-from-vm"
-  description = "Allow EKS API access only from my VM"
-  vpc_id      = var.vpc_id
-
-  ingress {
-    description     = "Allow Kubernetes API from VM"
-    from_port       = 1
-    to_port         = 60000
-    protocol        = "tcp"
-    #security_groups = "sg-019cadb4a1016a40b"
-    cidr_blocks = ["0.0.0.0/0"]  # Allows from any IP
-  }
-
-  tags = {
-    Terraform = "true"
-  }
-}
-
 
 
 # --- EKS Cluster Setup ---
@@ -41,9 +22,9 @@ module "eks" {
 
   eks_managed_node_groups = {
     default = {
-      desired_size   = 3
-      max_size       = 3
-      min_size       = 3
+      desired_size   = 2
+      max_size       = 2
+      min_size       = 2
       instance_types = ["t3.medium"]
       subnet_ids     = var.subnet_id
     }
