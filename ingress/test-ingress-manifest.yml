@@ -1,20 +1,23 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: app-ingress-test
+  name: test-ingress
   namespace: test
   annotations:
+    kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/group.name: app-ingress-group  # important: groups them on same ALB
+    alb.ingress.kubernetes.io/group.name: app-ingress-group
+    # Remove all other annotations - we'll add back ONLY if this works
 spec:
+  ingressClassName: alb
   rules:
-  - http:
-      paths:
-      - path: /test
-        pathType: Prefix
-        backend:
-          service:
-            name: my-app-service
-            port:
-              number: 8000
+    - http:
+        paths:
+          - path: /test
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app-service
+                port:
+                  number: 8000
