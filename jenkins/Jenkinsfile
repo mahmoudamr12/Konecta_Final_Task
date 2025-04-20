@@ -44,6 +44,17 @@ pipeline {
                 '''
             }
         }
+        stage('Ensure ECR Repository Exists') {
+            steps {
+                withAWS(credentials: 'aws-creds', region: "${env.AWS_REGION}") {
+                    sh """
+                        aws ecr describe-repositories --repository-names ${ECR_REPO} || \
+                        aws ecr create-repository --repository-name ${ECR_REPO}
+                    """
+                }
+            }
+}
+
 
         stage('Push to ECR') {
             steps {
