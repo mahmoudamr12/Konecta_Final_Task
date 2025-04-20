@@ -38,7 +38,7 @@ class MainHandler(tornado.web.RequestHandler):
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/prod/?", MainHandler),
+            #(r"/prod/?", MainHandler),
             (r"/test/?", MainHandler),
         ]
         settings = {
