@@ -95,7 +95,7 @@ terraform apply
 > - Proper networking and security groups
 > - SSH access (based on your key pair)
 > - This also runs a script automatically that installs Jenkins, AWS-CLI, and Docker on the machine.
-NOTE: Terraform init installs all the required plugins for the modules, which may be fairly large in size.
+> - NOTE: Terraform init installs all the required plugins for the modules, which may be fairly large in size.
 ---
 
 ### 📤 Step 2: Deploy EKS from the CI/CD Machine
@@ -157,28 +157,61 @@ terraform apply
 
 ## ☸️ Kubernetes Deployment
 
-> This section deploys our containerized app into EKS using Kubernetes manifests.
+> This section deploys our containerized app into AWS EKS using Kubernetes manifests.
 
-### 🗂 Namespaces
+### 🧠 How It Works
 
-- `test`
-- `prod`
+The CI/CD pipeline (via Jenkins) automatically applies the **Deployment** and **Service** manifests during each build, based on the branch name:
+- `test` branch → deploys to the `test` namespace
+- `prod` branch → deploys to the `prod` namespace
 
-### 🧾 Resources Deployed
+Each environment gets:
+- A `Deployment` for running the app
+- A `Service` of type `LoadBalancer` (or ClusterIP if using Ingress)
+- Environment-specific configuration (via ConfigMap/Secret)
 
-- Deployments
-- Services
-- ConfigMaps / Secrets (for Redis host and environment)
-- LoadBalancers per environment
+---
 
-### ➕ Optional Ingress Routing
+### ➕ Optional: Expose Using Ingress
 
-> You can configure an Ingress resource to map:
-> - `/test` → test namespace
-> - `/prod` → prod namespace
+> Instead of exposing services individually, you can use an **Ingress** controller to route both test and prod apps through a single DNS endpoint.
 
-**📸 Screenshot: `kubectl get all` Output or K8s Dashboard**  
-_(Add screenshot here)_
+1. **CD into the ingress directory:**
+
+```bash
+cd ingress
+```
+
+2. **Apply both Ingress manifests:**
+
+```bash
+kubectl apply -f test-ingress-manifest.yml
+kubectl apply -f prod-ingress-manifest.yml
+```
+
+3. **Get the public DNS of the AWS ALB created automatically:**
+
+```bash
+kubectl get ingress -A
+```
+
+> Both `test` and `prod` ingresses will share the same DNS. Use it like so in your browser:
+
+```
+http://<ALB-DNS>/test   → should return: Hello from test
+http://<ALB-DNS>/prod   → should return: Hello from prod
+```
+
+📸 **Screenshot: Ingress Output & Browser Test**  
+
+![WhatsApp Image 2025-04-21 at 00 30 55_67c88e8e](https://github.com/user-attachments/assets/f7c43f81-5869-418d-8f67-bbca6c734f1f)
+
+
+![WhatsApp Image 2025-04-21 at 00 31 28_a706492f](https://github.com/user-attachments/assets/327694a0-86e6-403d-8256-85eedc3689f0)
+
+
+
+
 
 ---
 
