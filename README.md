@@ -159,6 +159,41 @@ terraform apply
 
 > This section deploys our containerized app into AWS EKS using Kubernetes manifests.
 
+---
+
+### ⚠️ Prerequisite: Install AWS ALB Ingress Controller (via Helm)
+
+> Before using Ingress resources, you **must install the ALB Ingress Controller**, which provisions the public ALB and assigns a DNS.
+
+1. **Add the EKS Helm repo:**
+
+```bash
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update
+```
+
+2. **Install the ALB Ingress Controller:**
+
+```bash
+helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=<your-cluster-name> \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller
+```
+
+> Make sure the IAM role and service account for the controller are already created via Terraform or manually.
+
+3. **Verify that the controller is running:**
+
+```bash
+kubectl get pods -n kube-system | grep aws-load-balancer-controller
+```
+
+You should see the ALB controller pod in `Running` status.
+
+---
+
 ### 🧠 How It Works
 
 The CI/CD pipeline (via Jenkins) automatically applies the **Deployment** and **Service** manifests during each build, based on the branch name:
@@ -167,19 +202,18 @@ The CI/CD pipeline (via Jenkins) automatically applies the **Deployment** and **
 
 Each environment gets:
 - A `Deployment` for running the app
-- A `Service` of type `LoadBalancer` (or ClusterIP if using Ingress)
-- Environment-specific configuration (via ConfigMap/Secret)
-
+- A `Service` of type `ClusterIP` or `LoadBalancer` (used by Ingress)
+- ConfigMaps 
 ---
 
 ### ➕ Optional: Expose Using Ingress
 
-> Instead of exposing services individually, you can use an **Ingress** controller to route both test and prod apps through a single DNS endpoint.
+> Instead of exposing services directly, you can use an **Ingress** resource to route both test and prod apps via a single public DNS using the AWS ALB.
 
 1. **CD into the ingress directory:**
 
 ```bash
-cd ingress
+cd Ingress
 ```
 
 2. **Apply both Ingress manifests:**
@@ -189,13 +223,13 @@ kubectl apply -f test-ingress-manifest.yml
 kubectl apply -f prod-ingress-manifest.yml
 ```
 
-3. **Get the public DNS of the AWS ALB created automatically:**
+3. **Get the public DNS of the ALB provisioned by the controller:**
 
 ```bash
 kubectl get ingress -A
 ```
 
-> Both `test` and `prod` ingresses will share the same DNS. Use it like so in your browser:
+> Both ingresses will have the **same ALB DNS**. You can access your app via:
 
 ```
 http://<ALB-DNS>/test   → should return: Hello from test
