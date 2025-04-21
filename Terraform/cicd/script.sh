@@ -13,7 +13,7 @@ while ! nc -z $PUBLIC_IP 22; do
 done
 
 echo "SSH is available. Generating dynamic Ansible inventory...."
-cd /home/mahmoud/final_project_konecta/Konecta_Final_Task/ansible
+cd ../../Ansible
 
 rm inventory.ini
 cat <<EOF > inventory.ini
