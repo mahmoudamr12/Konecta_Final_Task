@@ -251,25 +251,63 @@ http://<ALB-DNS>/prod   → should return: Hello from prod
 
 ## 📊 Monitoring and Observability
 
-> Observability is essential for managing your infrastructure and services. We use Prometheus + Grafana for this purpose.
+> Observability is essential for managing your infrastructure and services. We use **Prometheus** and **Grafana** to monitor both the EKS cluster and the Jenkins CI/CD VM.
 
-### 🔧 Setup
+---
 
-- Deploy Prometheus and Grafana to the EKS cluster
-- Configure Grafana data sources and dashboards
+### ⚙️ Setup: Install Prometheus & Grafana with Helm
 
-### 📈 Dashboards
+> First, install both Prometheus and Grafana into your EKS cluster using Helm. These tools will provide monitoring for your Kubernetes workloads and infrastructure.
 
-#### Cluster Dashboard:
-- Node & pod health
-- CPU / Memory usage
+1. **Add the Prometheus community Helm chart:**
 
-#### Jenkins VM Dashboard:
-- Resource usage
-- VM uptime and availability
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+```
 
-**📸 Screenshot: Grafana Dashboards**  
-_(Add screenshot here)_
+2. **Install Prometheus:**
+
+```bash
+helm install prometheus prometheus-community/prometheus \
+  --namespace monitoring --create-namespace
+```
+
+3. **Install Grafana:**
+
+```bash
+helm install grafana prometheus-community/grafana \
+  --namespace monitoring
+```
+
+4. **Check that all pods are running:**
+
+```bash
+kubectl get pods -n monitoring
+```
+
+> You should see `prometheus-server`, `grafana`, and related components in `Running` status before continuing.
+
+---
+
+### 📈 Dashboards Overview
+
+#### 📦 Cluster Dashboard (Prometheus + Grafana)
+Monitor the overall health of your Kubernetes cluster:
+- Node status (Ready/NotReady)
+- Pod health across namespaces
+- CPU and Memory utilization over time
+
+#### 🧰 Jenkins VM Dashboard
+Track the performance of the EC2 instance running Jenkins:
+- CPU, memory, and disk metrics
+- Uptime, availability, and network I/O
+- Export metrics via a Node Exporter (optional)
+
+---
+
+📸 **Screenshot: Grafana Dashboards**  
+
 
 ---
 
