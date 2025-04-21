@@ -128,19 +128,6 @@ terraform apply
 > - No public IPs are assigned to any nodes (fully private)
 
 
-## 🤖 Automated Jenkins Setup (Ansible + Bash)
-
-> After creating the EC2 instance, we need to install and configure Jenkins automatically.
-> This section handles that using a Bash script + Ansible playbook, executed as part of the Terraform flow (zero manual intervention).
-
-- Bash Script:
-  - Waits until EC2 is ready
-  - Triggers the Ansible playbook
-- Ansible Playbook:
-  - Installs and configures Jenkins
-
-> ✅ This ensures Jenkins is ready as soon as infrastructure is provisioned.
-
 ---
 
 ## ⚙️ Jenkins CI/CD Pipeline
@@ -152,32 +139,21 @@ terraform apply
 
 **Key Jenkinsfile features:**
 
-- Builds and pushes image to Amazon ECR
-- Uses branch names to deploy to correct namespace:
-  - `test` → test environment (`Hello from test`)
-  - `prod` → prod environment (`Hello from prod`)
+- Pulls the latest build and pushes the docker image to Amazon ECR
+- Creates the appropriate namespace and deploy the kubernetes manifests on the cluster
+- Uses a multi-branch pipeline to deploy to correct namespace:
+  - `test` → Creates and deploys manifests on test namespace
+  - `prod` → Creates and deploys manifests on prod namespace
 - Injects environment variables securely
-- Uses GitHub webhook to auto-trigger builds
+- Uses GitHub webhook to auto-trigger builds on push and merge events
 
 **📸 Screenshot: Jenkins Interface**  
-_(Add screenshot here)_
+
+![WhatsApp Image 2025-04-20 at 00 46 29_43aac330](https://github.com/user-attachments/assets/fa0a7944-ee8f-46de-9c85-d7357ec27377)
 
 ---
 
-## 🐳 Containerizing the App
 
-> The Python counter app is containerized with Docker to make it portable and ready for orchestration.
-
-### Build the Docker Image
-
-```bash
-docker build -t counter-app .
-```
-
-- Image contains the Python app
-- Redis connection handled via ENV variables
-
----
 
 ## ☸️ Kubernetes Deployment
 
