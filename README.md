@@ -95,7 +95,7 @@ terraform apply
 > - Proper networking and security groups
 > - SSH access (based on your key pair)
 > - This also runs a script automatically that installs Jenkins, AWS-CLI, and Docker on the machine.
-
+NOTE: Terraform init installs all the required plugins for the modules, which may be fairly large in size.
 ---
 
 ### 📤 Step 2: Deploy EKS from the CI/CD Machine
