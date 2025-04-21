@@ -68,50 +68,64 @@ cd Konecta_Final_Task
 
 ---
 
-## 🔧 Environment Setup
+## ☁️ Infrastructure Provisioning with Terraform
 
-In this section, we prepare the environment to provision our infrastructure using Terraform.
-
-1. **Configure AWS credentials**
-
-```bash
-aws configure
-```
-
-2. **Set up S3 backend for Terraform state management**  
-   Modify `backend.tf` with your S3 bucket and DynamoDB table.
-
-3. **Initialize Terraform**
-
-```bash
-terraform init
-```
+> In this section, we’re using Terraform to provision our entire infrastructure in two stages:
+> - First, we create a CI/CD EC2 machine (which will host Jenkins and serve as the Terraform controller)
+> - Then, from within that machine, we provision a **private EKS cluster** with all related networking.
 
 ---
 
-## ☁️ Infrastructure Setup (Terraform)
+### 🏗️ Step 1: Provision the CI/CD Machine (Locally)
 
-> In this section, we're using Terraform to provision the core infrastructure:
-> - A private EKS cluster (for app deployment)
-> - A CI/CD EC2 VM (for Jenkins)
-> - An S3 bucket (for storing Terraform state)
-
-### 🚀 Apply Terraform Configuration
+> This step initializes the infrastructure by creating an EC2 instance that will later act as the Jenkins server and also handle EKS provisioning.
 
 ```bash
+cd terraform/cicd
+
+# Configure AWS CLI before running this if not already done
+aws configure
+
+terraform init
 terraform apply
 ```
 
-> This will:
-> - Provision the EKS cluster
-> - Create an EC2 instance for Jenkins
-> - Set up required security groups and networking
-> - Output access info
-
-**📸 Screenshot: Terraform Output**  
-_(Add screenshot here)_
+> After this completes, you'll have:
+> - A CI/CD EC2 machine
+> - Proper networking and security groups
+> - SSH access (based on your key pair)
 
 ---
+
+### 📤 Step 2: Deploy EKS from the CI/CD Machine
+
+> Now that the CI/CD instance is live, we’ll SSH into it and copy the EKS Terraform configuration. This ensures **all further infrastructure is created from the CI/CD machine itself**, maintaining clean separation and control.
+
+#### 📁 Copy EKS Files to CI/CD Machine
+
+```bash
+scp -i <your-key.pem> -r terraform/eks ec2-user@<ci-cd-instance-public-ip>:~/eks
+```
+
+#### 🔐 SSH Into the CI/CD Machine
+
+```bash
+ssh -i <your-key.pem> ec2-user@<ci-cd-instance-public-ip>
+```
+
+#### 🚀 Run Terraform from Inside the CI/CD Machine
+
+```bash
+cd ~/eks
+terraform init
+terraform apply
+```
+
+> This creates:
+> - A private EKS cluster with 2 worker nodes
+> - All required networking (VPC, subnets, route tables)
+> - No public IPs are assigned to any nodes (fully private)
+
 
 ## 🤖 Automated Jenkins Setup (Ansible + Bash)
 
