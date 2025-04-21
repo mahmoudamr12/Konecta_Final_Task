@@ -24,4 +24,4 @@ EOF
 
 # Create temporary inventory file
 echo "Running Ansible playbook..."
-ansible-playbook -i inventory.ini jenkins_docker.yml
+ansible-playbook -i inventory.ini playbook.yml
