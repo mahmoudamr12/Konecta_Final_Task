@@ -94,6 +94,7 @@ terraform apply
 > - A CI/CD EC2 machine
 > - Proper networking and security groups
 > - SSH access (based on your key pair)
+> - This also runs a script automatically that installs Jenkins, AWS-CLI, and Docker on the machine.
 
 ---
 
