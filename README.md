@@ -192,6 +192,8 @@ kubectl get pods -n kube-system | grep aws-load-balancer-controller
 
 You should see the ALB controller pod in `Running` status.
 
+![WhatsApp Image 2025-04-19 at 01 38 37_87ab2b30](https://github.com/user-attachments/assets/abedbc61-6cf6-4e5e-8db6-633000b9d487)
+
 ---
 
 ### 🧠 How It Works
@@ -255,11 +257,11 @@ http://<ALB-DNS>/prod   → should return: Hello from prod
 
 ---
 
-### ⚙️ Setup: Install Prometheus & Grafana with Helm
+### ⚙️ Setup: Install Prometheus & Grafana on EKS with Helm
 
-> First, install both Prometheus and Grafana into your EKS cluster using Helm. These tools will provide monitoring for your Kubernetes workloads and infrastructure.
+> Prometheus scrapes metrics, and Grafana visualizes them. First, install both tools in the cluster.
 
-1. **Add the Prometheus community Helm chart:**
+1. **Add the Prometheus Helm repo:**
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -280,33 +282,107 @@ helm install grafana prometheus-community/grafana \
   --namespace monitoring
 ```
 
-4. **Check that all pods are running:**
+4. **Check that all monitoring pods are running:**
 
 ```bash
 kubectl get pods -n monitoring
 ```
 
-> You should see `prometheus-server`, `grafana`, and related components in `Running` status before continuing.
+---
+
+### 🧰 Monitor Jenkins VM with Node Exporter
+
+> To collect metrics from the Jenkins CI/CD VM, we install **Node Exporter** on the VM and configure Prometheus to scrape it.
+
+#### 🔧 Install Node Exporter on the Jenkins VM
+
+1. **SSH into the Jenkins VM:**
+
+```bash
+ssh -i <your-key.pem> ec2-user@<jenkins-vm-ip>
+```
+
+2. **Download and run Node Exporter:**
+
+```bash
+wget https://github.com/prometheus/node_exporter/releases/latest/download/node_exporter-1.7.0.linux-amd64.tar.gz
+tar -xzf node_exporter-*.tar.gz
+cd node_exporter-*
+./node_exporter &
+```
+
+> By default, Node Exporter runs on port `9100`.
+
+---
+
+### 🔧 Configure Prometheus to Scrape Jenkins VM
+
+> Update the `prometheus.yml` config file to include your Jenkins VM as a target.
+
+1. **Edit `prometheus-server` config:**
+
+```bash
+kubectl edit configmap prometheus-server -n monitoring
+```
+
+2. **Add a new job under `scrape_configs`:**
+
+```yaml
+  - job_name: 'jenkins-vm'
+    static_configs:
+      - targets: ['<jenkins-vm-private-ip>:9100']
+```
+
+> Replace `<jenkins-vm-private-ip>` with the internal/private IP of your EC2 Jenkins VM.
+
+3. **Restart the Prometheus server pod to apply the config changes:**
+
+```bash
+kubectl delete pod -l app=prometheus,component=server -n monitoring
+```
 
 ---
 
 ### 📈 Dashboards Overview
 
-#### 📦 Cluster Dashboard (Prometheus + Grafana)
-Monitor the overall health of your Kubernetes cluster:
-- Node status (Ready/NotReady)
-- Pod health across namespaces
-- CPU and Memory utilization over time
+#### 📦 Cluster Dashboard
+
+
+📸 **Screenshot: Grafana Dashboards**  
+
+
+
+- Node & pod health
+![WhatsApp Image 2025-04-19 at 19 50 49_8170efc2](https://github.com/user-attachments/assets/f8887cec-dfa6-4caf-a9d9-152adf70c5de)
+
+![WhatsApp Image 2025-04-19 at 19 59 38_7d0d9800](https://github.com/user-attachments/assets/3506fb60-874b-4718-b421-1ba4aea49604)
+
+![WhatsApp Image 2025-04-19 at 20 01 23_48c21501](https://github.com/user-attachments/assets/0abc728e-4609-495d-8589-be54aa7ceaae)
+
+
+- CPU / Memory usage
+
+![WhatsApp Image 2025-04-19 at 19 53 09_bcaf316a](https://github.com/user-attachments/assets/2ecbe59c-b877-40b1-82d0-ea4a6674e6a2)
+
+
+
 
 #### 🧰 Jenkins VM Dashboard
-Track the performance of the EC2 instance running Jenkins:
-- CPU, memory, and disk metrics
-- Uptime, availability, and network I/O
-- Export metrics via a Node Exporter (optional)
+- System resource usage from Node Exporter
+- VM uptime, CPU load, and memory footprint
+
+
+![WhatsApp Image 2025-04-19 at 22 46 55_c0740e32](https://github.com/user-attachments/assets/07b8e74a-2611-4b47-8d33-267167e7c0ae)
+
 
 ---
 
-📸 **Screenshot: Grafana Dashboards**  
+
+
+
+
+
+
 
 
 ---
@@ -315,40 +391,13 @@ Track the performance of the EC2 instance running Jenkins:
 
 ```bash
 .
-├── ansible/                 # Jenkins installation playbook
-├── app/                    # Python counter app
-├── docker/                 # Dockerfile
-├── jenkins/                # Jenkinsfile
-├── k8s/                    # Kubernetes manifests
-├── terraform/              # Terraform code
-└── scripts/                # Bash provisioning scripts
+├── Ansible/                 # Jenkins installation playbook   
+├── Docker/                 # Dockerfile
+├── Jenkins/                # Jenkinsfile
+├── Kubernetes/                    # Kubernetes manifests
+├── Terraform/              # Terraform code
+└── Ingress/                # Bash provisioning scripts
 ```
 
 ---
 
-## 🔐 Security Notes
-
-- AWS credentials not committed to source
-- Secrets managed via Jenkins credentials or Kubernetes Secrets
-- Security groups are tightly scoped
-- No public IPs assigned to EKS nodes
-
----
-
-## ✅ Testing and Validation
-
-- Confirm deployments using `kubectl`
-- Access apps via LoadBalancer or Ingress
-- Test Redis persistence by refreshing and interacting with the app
-- Review CI/CD runs in Jenkins
-- Monitor in Grafana
-
----
-
-## 📬 Support
-
-For questions or issues, open a [GitHub Issue](https://github.com/mahmoudamr12/Konecta_Final_Task/issues)
-
----
-
-_This README is a live document. Screenshots and final configuration tips to be added soon._
