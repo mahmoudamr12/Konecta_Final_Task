@@ -403,3 +403,6 @@ kubectl delete pod -l app=prometheus,component=server -n monitoring
 
 ---
 
+
+![Visual drawio](https://github.com/user-attachments/assets/64e1dd44-2eda-48bc-a7c6-7a2467d44e09)
+
