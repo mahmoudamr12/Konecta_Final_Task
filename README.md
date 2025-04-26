@@ -119,7 +119,6 @@ ssh -i <your-key.pem> ec2-user@<ci-cd-instance-public-ip>
 #### 🚀 Run Terraform from Inside the CI/CD Machine
 
 ```bash
-cd ~/eks
 terraform init
 terraform apply
 ```
@@ -404,5 +403,6 @@ kubectl delete pod -l app=prometheus,component=server -n monitoring
 ---
 
 
-![Visual drawio](https://github.com/user-attachments/assets/64e1dd44-2eda-48bc-a7c6-7a2467d44e09)
+
+![Visual drawio (1)](https://github.com/user-attachments/assets/0a1a6891-3897-4567-a349-b5931b2112b8)
 
